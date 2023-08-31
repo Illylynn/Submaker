@@ -18,7 +18,7 @@ def get_version_info():
     distribution = current_version_info[1]
 
     if distribution == "dev":
-        latest_version_info = requests.get("https://raw.githubusercontent.com/Illylynn/Submaker/main/version.txt").text.split(" ")
+        latest_version_info = requests.get("https://raw.githubusercontent.com/Illylynn/Submaker/master/version.txt").text.split(" ")
         latest_version = float(latest_version_info[0])
     else:
         raise ValueError("Invalid distribution type")
@@ -28,14 +28,13 @@ def get_version_info():
 def update():
     
     for f in os.listdir(os.getcwd()):
-        if os.path.isdir(os.path.join(os.getcwd(), f)) and not f == ".git":
-            shutil.rmtree(os.path.join(os.getcwd(), f), onerror=make_dir_writable)
-        else:
-            os.remove(os.path.join(os.getcwd(), f))
+        if not f == ".git":
+            if os.path.isdir(os.path.join(os.getcwd(), f)):
+                shutil.rmtree(os.path.join(os.getcwd(), f), onerror=make_dir_writable)
+            else:
+                os.remove(os.path.join(os.getcwd(), f))
         
-    files = [repo_file["path"] for repo_file in json.loads(requests.get("https://api.github.com/repos/Illylynn/Submaker/git/trees/main?recursive=1").text)["tree"] if "size" in repo_file]
-            
-    print(files)
+    files = [repo_file["path"] for repo_file in json.loads(requests.get("https://api.github.com/repos/Illylynn/Submaker/git/trees/master?recursive=1").text)["tree"] if "size" in repo_file]
             
     for path in files:
         for directory in range(path.count("/")):
@@ -49,12 +48,10 @@ def update():
             corrected_path = os.path.join(corrected_path, sub)
                     
         if "mp3" in corrected_path or "wav" in corrected_path:
-            print(path)
-            content = requests.get("https://raw.githubusercontent.com/Illylynn/Submaker/main/%s" % path).content
+            content = requests.get("https://raw.githubusercontent.com/Illylynn/Submaker/master/%s" % path).content
             f = open(corrected_path, "ab")
         else:
-            print(path)
-            content = requests.get("https://raw.githubusercontent.com/Illylynn/Submaker/main/%s" % path).text
+            content = requests.get("https://raw.githubusercontent.com/Illylynn/Submaker/master/%s" % path).text
             f = open(corrected_path, "a", encoding="utf-8")
             
         f.write(content)
