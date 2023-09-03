@@ -1,1 +1,5 @@
 __pycache__/
+*.spec
+build/
+dist/
+config.py

@@ -4,6 +4,7 @@ import os
 import shutil
 import stat
 import time
+import config
 
 def make_dir_writable(function, path, exception):
     """The path on Windows cannot be gracefully removed due to being read-only,
@@ -21,13 +22,21 @@ def get_version_info():
 
     if distribution == "dev":
         latest_version_info = requests.get("https://raw.githubusercontent.com/Illylynn/Submaker/master/version.txt").text.split(" ")
-        latest_version = float(latest_version_info[0])
+        
+    elif distribution == "release":
+        latest_version_info = requests.get("https://raw.githubusercontent.com/Illylynn/Submaker/production/version.txt").text.split(" ")
     else:
         raise ValueError("Invalid distribution type")
     
+    latest_version = float(latest_version_info[0])
+    
     return current_version, latest_version, last_updated
 
-def update():
+def update(distribution):
+    if distribution == "dev": 
+        branch = "master"
+    else:
+        branch = "production"
     
     for f in os.listdir(os.getcwd()):
         if not f == ".git":
@@ -36,7 +45,7 @@ def update():
             else:
                 os.remove(os.path.join(os.getcwd(), f))
         
-    files = [repo_file["path"] for repo_file in json.loads(requests.get("https://api.github.com/repos/Illylynn/Submaker/git/trees/master?recursive=1").text)["tree"] if "size" in repo_file]
+    files = [repo_file["path"] for repo_file in json.loads(requests.get("https://api.github.com/repos/Illylynn/Submaker/git/trees/%s?recursive=1" % branch).text)["tree"] if "size" in repo_file]
             
     for path in files:
         for directory in range(path.count("/")):
@@ -50,10 +59,10 @@ def update():
             corrected_path = os.path.join(corrected_path, sub)
                     
         if "mp3" in corrected_path or "wav" in corrected_path:
-            content = requests.get("https://raw.githubusercontent.com/Illylynn/Submaker/master/%s" % path).content
+            content = requests.get("https://raw.githubusercontent.com/Illylynn/Submaker/%s/%s" % (branch, path)).content
             f = open(corrected_path, "ab")
         else:
-            content = requests.get("https://raw.githubusercontent.com/Illylynn/Submaker/master/%s" % path).text
+            content = requests.get("https://raw.githubusercontent.com/Illylynn/Submaker/%s/%s" % (branch, path)).text
             f = open(corrected_path, "a", encoding="utf-8")
             
         f.write(content)
@@ -77,4 +86,3 @@ def update_last_updated_info():
     version_file = open("version.txt", "w")
     version_file.write(new_contents)
     version_file.close()
-
