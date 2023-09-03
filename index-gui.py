@@ -6,10 +6,15 @@ import os
 import pathlib
 import PIL
 from PIL import ImageGrab
+import time
 
 from affsmaker import generate_affs
 from audio import create_audio
 from visual import create_visual
+
+from auto_update import get_version_info, update
+
+update_period = 3600
 
 class TabPanel(wx.Panel):
     def __init__(self, parent, name):
@@ -244,10 +249,27 @@ class Window(wx.Frame):
         self.SetMenuBar(menuBar)
         self.Show(True)
         
+        if time.time() - float(get_version_info()[2]) > update_period:
+            should_update = self.ask_for_update()
+            
+            if should_update:
+                dlg = wx.MessageDialog(self, "Restart after the update", "Submaker", wx.OK).ShowModal()
+                if dlg == wx.ID_OK:
+                    update()
+            
+        
     def on_tab_change(self, event):
         current_page = self.notebook.GetPage(event.GetSelection())
         
         event.Skip()
+        
+    def ask_for_update(self):
+        dlg = wx.MessageDialog(self, "Submaker needs an update", "Submaker", wx.YES_NO)
+        dlg.SetYesNoLabels("Update", "Remind me later")
+        if dlg.ShowModal() == wx.ID_YES:
+            return True
+        else:
+            return False
         
     def OnAbout(self, e):
         dlg = wx.MessageDialog(self, "This app is made by Illy", "About submaker", wx.OK)

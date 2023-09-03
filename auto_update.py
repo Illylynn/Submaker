@@ -3,6 +3,7 @@ import json
 import os
 import shutil
 import stat
+import time
 
 def make_dir_writable(function, path, exception):
     """The path on Windows cannot be gracefully removed due to being read-only,
@@ -16,6 +17,7 @@ def get_version_info():
     current_version = float(current_version_info[0])
 
     distribution = current_version_info[1]
+    last_updated = current_version_info[2] if len(current_version_info) > 2 else time.time()
 
     if distribution == "dev":
         latest_version_info = requests.get("https://raw.githubusercontent.com/Illylynn/Submaker/master/version.txt").text.split(" ")
@@ -23,7 +25,7 @@ def get_version_info():
     else:
         raise ValueError("Invalid distribution type")
     
-    return current_version, latest_version
+    return current_version, latest_version, last_updated
 
 def update():
     
@@ -56,6 +58,23 @@ def update():
             
         f.write(content)
         f.close()
-
-update()
+        
+    update_last_updated_info()
+    
+def update_last_updated_info():
+    version_file = open("version.txt", "r")
+    
+    version_info = version_file.read().split(" ")[0:2]  
+    
+    time_string = str(time.time())
+    
+    version_info.append(time_string)
+    
+    new_contents = " ".join(version_info)
+    
+    version_file.close()
+    
+    version_file = open("version.txt", "w")
+    version_file.write(new_contents)
+    version_file.close()
 
